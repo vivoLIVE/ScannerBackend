@@ -12,6 +12,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,17 +54,25 @@ public class FirestoreService {
     @PostConstruct
     public void init() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
-            InputStream serviceAccount = getClass().getResourceAsStream("/static/scannerapp-450016-75864146f29b.json");
-            if (serviceAccount == null) {
-                throw new FileNotFoundException("Service account key file not found in classpath.");
+            // Get the path from environment variable
+            String keyPath = System.getenv("FIREBASE_CONFIG_PATH");
+
+            if (keyPath == null || keyPath.isEmpty()) {
+                throw new FileNotFoundException("Environment variable FIREBASE_CONFIG_PATH is not set.");
             }
+
+            FileInputStream serviceAccount = new FileInputStream(keyPath);
+
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .build();
+
             FirebaseApp.initializeApp(options);
         }
+
         db = FirestoreClient.getFirestore();
     }
+
 
     public DocumentSnapshot getProductByBarcode(String barcode) throws Exception {
         ApiFuture<DocumentSnapshot> future = db.collection("products").document(barcode).get();
