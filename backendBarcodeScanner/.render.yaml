@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: barcode-backend
+    env: java
+    plan: free
+    buildCommand: ./mvnw clean install
+    startCommand: java -jar target/backendBarcodeScanner-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: FIREBASE_CONFIG_PATH
+        value: /etc/secrets/firebase-key.json
+    secretFiles:
+      - mountPath: /etc/secrets/firebase-key.json
+        name: firebase-key
